@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spot the Differences Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            color: #4a5568;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .task-info {
+            color: #718096;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #e53e3e;
+            margin-bottom: 20px;
+        }
+
+        .images-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .image-section {
+            text-align: center;
+        }
+
+        .image-title {
+            font-size: 1.3em;
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .image-canvas {
+            border: 3px solid #4a5568;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            width: 400px;
+            height: 300px;
+            background: white;
+        }
+
+        .input-section {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-title {
+            font-size: 1.4em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .difference-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .difference-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .difference-input input:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .difference-input input.correct {
+            border-color: #48bb78;
+            background-color: #f0fff4;
+        }
+
+        .difference-input input.incorrect {
+            border-color: #f56565;
+            background-color: #fef5e7;
+        }
+
+        .status-icon {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-icon.correct {
+            background-color: #48bb78;
+        }
+
+        .status-icon.incorrect {
+            background-color: #f56565;
+        }
+
+        .progress {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #4a5568;
+        }
+
+        .answers-section {
+            background: #fef5e7;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid #ed8936;
+        }
+
+        .next-task-btn {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .next-task-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .completion-message {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .images-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .image-canvas {
+                width: 300px;
+                height: 225px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">🔍 Spot the Differences</h1>
+            <div class="task-info">Task <span id="currentTask">1</span> of <span id="totalTasks">3</span></div>
+            <div class="timer">Time: <span id="timeLeft">2:00</span></div>
+        </div>
+
+        <div class="images-container">
+            <div class="image-section">
+                <div class="image-title">Original Image</div>
+                <canvas id="originalCanvas" class="image-canvas" width="400" height="300"></canvas>
+            </div>
+            <div class="image-section">
+                <div class="image-title">Modified Image</div>
+                <canvas id="modifiedCanvas" class="image-canvas" width="400" height="300"></canvas>
+            </div>
+        </div>
+
+        <div class="progress">
+            Found: <span id="foundCount">0</span> / 5 differences
+        </div>
+
+        <div class="input-section">
+            <div class="input-title">Enter the differences you found:</div>
+            <div id="inputContainer">
+                <!-- Inputs will be generated here -->
+            </div>
+        </div>
+
+        <div id="answersSection" class="answers-section" style="display: none;">
+            <h3>⏰ Time's up! Here are the answers:</h3>
+            <div id="answersList"></div>
+        </div>
+
+        <button id="nextTaskBtn" class="next-task-btn" style="display: none;">Next Task →</button>
+        
+        <div id="completionMessage" class="completion-message" style="display: none;">
+            🎉 Congratulations! You've completed all tasks! 🎉
+        </div>
+    </div>
+
+    <script>
+        const tasks = [
+            {
+                title: "Park Scene",
+                differences: ["cloud", "bird", "bench", "flower", "tree"],
+                drawOriginal: function(ctx) {
+                    // Sky
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.fillRect(0, 0, 400, 150);
+                    
+                    // Ground
+                    ctx.fillStyle = '#90EE90';
+                    ctx.fillRect(0, 150, 400, 150);
+                    
+                    // Sun
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(350, 50, 30, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Tree
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(80, 120, 20, 80);
+                    ctx.fillStyle = '#228B22';
+                    ctx.beginPath();
+                    ctx.arc(90, 120, 40, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Bench
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(200, 180, 80, 40);
+                    ctx.fillRect(205, 160, 10, 20);
+                    ctx.fillRect(265, 160, 10, 20);
+                    
+                    // Path
+                    ctx.fillStyle = '#D2B48C';
+                    ctx.fillRect(150, 200, 100, 30);
+                },
+                drawModified: function(ctx) {
+                    // Same as original but with differences
+                    this.drawOriginal(ctx);
+                    
+                    // Add cloud (difference 1)
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(150, 60, 15, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(165, 60, 18, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(180, 60, 15, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Add bird (difference 2)
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.moveTo(250, 80);
+                    ctx.lineTo(260, 85);
+                    ctx.lineTo(250, 90);
+                    ctx.lineTo(240, 85);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Change bench color to red (difference 3)
+                    ctx.fillStyle = '#FF4500';
+                    ctx.fillRect(200, 180, 80, 40);
+                    
+                    // Add flower (difference 4)
+                    ctx.fillStyle = '#FF69B4';
+                    ctx.beginPath();
+                    ctx.arc(320, 170, 8, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillStyle = '#32CD32';
+                    ctx.fillRect(318, 175, 4, 20);
+                    
+                    // Make tree bigger (difference 5)
+                    ctx.fillStyle = '#228B22';
+                    ctx.beginPath();
+                    ctx.arc(90, 120, 50, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            },
+            {
+                title: "Kitchen Scene",
+                differences: ["apple", "window", "pot", "clock", "cabinet"],
+                drawOriginal: function(ctx) {
+                    // Background
+                    ctx.fillStyle = '#F5F5DC';
+                    ctx.fillRect(0, 0, 400, 300);
+                    
+                    // Counter
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(0, 200, 400, 100);
+                    
+                    // Stove
+                    ctx.fillStyle = '#C0C0C0';
+                    ctx.fillRect(50, 150, 80, 50);
+                    
+                    // Cabinet
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(200, 100, 60, 100);
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(200, 100, 60, 100);
+                    ctx.strokeRect(230, 100, 0, 100);
+                    
+                    // Sink
+                    ctx.fillStyle = '#E6E6FA';
+                    ctx.fillRect(300, 160, 70, 40);
+                    
+                    // Clock on wall
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(100, 60, 25, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    // Clock hands
+                    ctx.beginPath();
+                    ctx.moveTo(100, 60);
+                    ctx.lineTo(100, 45);
+                    ctx.moveTo(100, 60);
+                    ctx.lineTo(115, 60);
+                    ctx.stroke();
+                },
+                drawModified: function(ctx) {
+                    this.drawOriginal(ctx);
+                    
+                    // Add apple on counter (difference 1)
+                    ctx.fillStyle = '#FF0000';
+                    ctx.beginPath();
+                    ctx.arc(150, 180, 12, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillStyle = '#228B22';
+                    ctx.fillRect(148, 168, 4, 8);
+                    
+                    // Add window (difference 2)
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.fillRect(280, 50, 60, 60);
+                    ctx.strokeStyle = '#8B4513';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(280, 50, 60, 60);
+                    ctx.strokeRect(310, 50, 0, 60);
+                    ctx.strokeRect(280, 80, 60, 0);
+                    
+                    // Add pot on stove (difference 3)
+                    ctx.fillStyle = '#696969';
+                    ctx.beginPath();
+                    ctx.arc(90, 140, 15, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillRect(85, 135, 10, 5);
+                    
+                    // Change clock hands (difference 4)
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(100, 60, 23, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(100, 60, 25, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(100, 60);
+                    ctx.lineTo(85, 50);
+                    ctx.moveTo(100, 60);
+                    ctx.lineTo(110, 75);
+                    ctx.stroke();
+                    
+                    // Change cabinet color (difference 5)
+                    ctx.fillStyle = '#4169E1';
+                    ctx.fillRect(200, 100, 60, 100);
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(200, 100, 60, 100);
+                    ctx.strokeRect(230, 100, 0, 100);
+                }
+            },
+            {
+                title: "Beach Scene",
+                differences: ["umbrella", "seagull", "shell", "boat", "wave"],
+                drawOriginal: function(ctx) {
+                    // Sky
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.fillRect(0, 0, 400, 180);
+                    
+                    // Sea
+                    ctx.fillStyle = '#4682B4';
+                    ctx.fillRect(0, 120, 400, 60);
+                    
+                    // Beach
+                    ctx.fillStyle = '#F4A460';
+                    ctx.fillRect(0, 180, 400, 120);
+                    
+                    // Sun
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(50, 50, 30, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Palm tree
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(320, 140, 15, 60);
+                    ctx.fillStyle = '#228B22';
+                    for (let i = 0; i < 6; i++) {
+                        ctx.save();
+                        ctx.translate(327, 140);
+                        ctx.rotate((i * 60) * Math.PI / 180);
+                        ctx.fillRect(-5, -30, 10, 30);
+                        ctx.restore();
+                    }
+                    
+                    // Beach ball
+                    ctx.fillStyle = '#FF4500';
+                    ctx.beginPath();
+                    ctx.arc(150, 220, 20, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(150, 220, 20, 0, Math.PI);
+                    ctx.fill();
+                },
+                drawModified: function(ctx) {
+                    this.drawOriginal(ctx);
+                    
+                    // Add beach umbrella (difference 1)
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(248, 160, 4, 40);
+                    ctx.fillStyle = '#FF1493';
+                    ctx.beginPath();
+                    ctx.arc(250, 160, 25, 0, Math.PI, true);
+                    ctx.fill();
+                    
+                    // Add seagull (difference 2)
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.moveTo(300, 70);
+                    ctx.lineTo(315, 75);
+                    ctx.lineTo(300, 80);
+                    ctx.lineTo(285, 75);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Add shell (difference 3)
+                    ctx.fillStyle = '#FFB6C1';
+                    ctx.beginPath();
+                    ctx.arc(100, 250, 8, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillStyle = '#FF69B4';
+                    ctx.beginPath();
+                    ctx.moveTo(100, 242);
+                    ctx.lineTo(95, 250);
+                    ctx.lineTo(105, 250);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Add boat (difference 4)
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(350, 135, 30, 10);
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(360, 125, 3, 15);
+                    ctx.beginPath();
+                    ctx.moveTo(363, 125);
+                    ctx.lineTo(375, 130);
+                    ctx.lineTo(363, 135);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Add wave (difference 5)
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(200, 140, 8, 0, Math.PI, true);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(220, 145, 6, 0, Math.PI, true);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(240, 142, 7, 0, Math.PI, true);
+                    ctx.fill();
+                }
+            }
+        ];
+
+        let currentTaskIndex = 0;
+        let foundDifferences = 0;
+        let timeLeft = 120; // 2 minutes
+        let timerInterval;
+        let gameActive = true;
+
+        function initGame() {
+            document.getElementById('totalTasks').textContent = tasks.length;
+            loadTask();
+        }
+
+        function loadTask() {
+            currentTaskIndex = Math.min(currentTaskIndex, tasks.length - 1);
+            const task = tasks[currentTaskIndex];
+            
+            document.getElementById('currentTask').textContent = currentTaskIndex + 1;
+            foundDifferences = 0;
+            timeLeft = 120;
+            gameActive = true;
+            
+            updateProgress();
+            createInputs();
+            drawImages();
+            startTimer();
+            
+            // Hide previous results
+            document.getElementById('answersSection').style.display = 'none';
+            document.getElementById('nextTaskBtn').style.display = 'none';
+            document.getElementById('completionMessage').style.display = 'none';
+        }
+
+        function drawImages() {
+            const task = tasks[currentTaskIndex];
+            const originalCanvas = document.getElementById('originalCanvas');
+            const modifiedCanvas = document.getElementById('modifiedCanvas');
+            const originalCtx = originalCanvas.getContext('2d');
+            const modifiedCtx = modifiedCanvas.getContext('2d');
+            
+            // Clear canvases
+            originalCtx.clearRect(0, 0, 400, 300);
+            modifiedCtx.clearRect(0, 0, 400, 300);
+            
+            // Draw images
+            task.drawOriginal(originalCtx);
+            task.drawModified(modifiedCtx);
+        }
+
+        function createInputs() {
+            const container = document.getElementById('inputContainer');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                const div = document.createElement('div');
+                div.className = 'difference-input';
+                div.innerHTML = `
+                    <input type="text" placeholder="Difference ${i + 1}" id="input${i}" />
+                    <div class="status-icon" id="status${i}"></div>
+                `;
+                container.appendChild(div);
+                
+                const input = document.getElementById(`input${i}`);
+                input.addEventListener('input', () => checkAnswer(i));
+            }
+        }
+
+        function checkAnswer(index) {
+            const input = document.getElementById(`input${index}`);
+            const status = document.getElementById(`status${index}`);
+            const task = tasks[currentTaskIndex];
+            const answer = input.value.toLowerCase().trim();
+            
+            if (task.differences.some(diff => diff.toLowerCase() === answer)) {
+                if (!input.classList.contains('correct')) {
+                    input.classList.remove('incorrect');
+                    input.classList.add('correct');
+                    status.classList.remove('incorrect');
+                    status.classList.add('correct');
+                    status.textContent = '✓';
+                    foundDifferences++;
+                    updateProgress();
+                    
+                    if (foundDifferences === 5) {
+                        gameWon();
+                    }
+                }
+            } else if (answer.length > 0) {
+                input.classList.remove('correct');
+                input.classList.add('incorrect');
+                status.classList.remove('correct');
+                status.classList.add('incorrect');
+                status.textContent = '✗';
+            } else {
+                input.classList.remove('correct', 'incorrect');
+                status.classList.remove('correct', 'incorrect');
+                status.textContent = '';
+            }
+        }
+
+        function updateProgress() {
+            document.getElementById('foundCount').textContent = foundDifferences;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gameActive) return;
+                
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timeLeft').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function timeUp() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            showAnswers();
+        }
+
+        function showAnswers() {
+            const task = tasks[currentTaskIndex];
+            const answersSection = document.getElementById('answersSection');
+            const answersList = document.getElementById('answersList');
+            
+            answersList.innerHTML = task.differences.map((diff, index) => 
+                `<p><strong>${index + 1}.</strong> ${diff.charAt(0).toUpperCase() + diff.slice(1)}</p>`
+            ).join('');
+            
+            answersSection.style.display = 'block';
+            document.getElementById('nextTaskBtn').style.display = 'block';
+        }
+
+        function gameWon() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            setTimeout(() => {
+                if (currentTaskIndex < tasks.length - 1) {
+                    document.getElementById('nextTaskBtn').style.display = 'block';
+                } else {
+                    document.getElementById('completionMessage').style.display = 'block';
+                }
+            }, 1000);
+        }
+
+        function nextTask() {
+            currentTaskIndex++;
+            if (currentTaskIndex < tasks.length) {
+                loadTask();
+            } else {
+                document.getElementById('completionMessage').style.display = 'block';
+                document.getElementById('nextTaskBtn').style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('nextTaskBtn').addEventListener('click', nextTask);
+
+        // Initialize game
+        initGame();
+    </script>
+</body>
+</html>
